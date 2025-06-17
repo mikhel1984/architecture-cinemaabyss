@@ -1,0 +1,100 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, "Пользователь", "Смотрит фильмы")
+Person(admin, "Поставщик контента", "Управляет контентом и настройками контента")
+
+System_Boundary(online_cinema, "Онлайн-кинотеатр") {
+    Container(waf, "WAF", "WAF", "WAF")
+    Container(nginx, "HTTP Reverse proxy", "Nginx", "Единая точка входа, маршрутизация")
+    Container(api_gateway, "API Gateway", "Java Spring", "API Gateway")
+    Container(back_for_front, "Back-End for Front-End", "Java", "Back-End for Front-End")
+
+    Container(frontend, "Front-End", "HTML, CSS, JS", "Допустим REACT и микрофронтенды")
+    Container(auth_service, "Auth Service", "Java", "Аутентификация (JWT/OAuth)")
+    Container(user_service, "User Service", "Java", "Профили")
+    Container(content_service, "Content Service", "Java", "Управление фильмами/сериалами")
+    Container(streaming_service, "Streaming Service", "Java", "Потоковая передача (HLS/DASH)")
+    Container(search_service, "Search Service", "Java + ElasticSearch", "Поиск и фильтрация")
+    Container(recommendation_service, "Recommendation Service", "Python", "ML-рекомендации")
+    Container(subscription_service, "Subscription Service", "Java", "Управление подписками")
+    Container(billing_service, "Billing Service", "Java", "Платежи")
+    Container(analytics_service, "Analytics Service", "Java", "Сбор статистики")
+    Container(notification_service, "Notification Service", "Java", "Email/SMS/Push")
+    Container(review_service, "Review Service", "Java", "Отзывы и рейтинги")
+
+    ContainerDb(user_db, "User DB", "PostgreSQL", "Данные пользователей")
+    ContainerDb(content_db, "Content DB", "PostgreSQL", "Метаданные контента")
+    ContainerDb(analytics_db, "Analytics DB", "ClickHouse", "Аналитика")
+    ContainerDb(search_service_db, "ElasticSearch", "ElasticSearch", "Полнотекстовый поиск")
+    ContainerDb(subscription_service_db, "Subscription DB", "PostgreSQL", "Управление подписками")
+    ContainerDb(review_service_db, "Review DB", "PostgreSQL", "Отзывы")
+    Container(s3_storage, "Media Storage", "S3", "Видеофайлы, фотофайлы")
+
+    ContainerQueue(kafka, "Event Bus", "Kafka", "Асинхронные события") {
+        Container(topic_user, "user-events", "Топик")
+        Container(topic_content, "content-events", "Топик")
+    }
+
+    ContainerDb(redis_cache_cluster, "Cache Cluster", "Redis", "Кэш кластер как сервис в инфраструктуре продукта для любого прикладного сервиса") {
+        Container(cache_user, "cache_user", "Пользователи")
+        Container(content_review, "content_review", "Кэш для популярных обзоров на контент")
+        Container(content_prview, "content_prview", "ТОП фото и видео для демо на контент")
+    }
+}
+
+System_Ext(payment_gateway, "Платежный шлюз", "Какой то сервис для платежей")
+System_Ext(cdn, "CDN", "CDN")
+
+' Connections
+Rel(admin, waf, "HTTPS", "PRODUCER calls")
+Rel(user, waf, "HTTPS", "USER calls")
+Rel(waf, nginx, "HTTPS", "HTTP calls")
+Rel(nginx, frontend, "Read files", "Read files")
+Rel(nginx, back_for_front, "HTTPS", "HTTP calls")
+Rel(back_for_front, api_gateway, "HTTPS", "HTTP calls")
+
+
+' API Gateway to services
+Rel(api_gateway, auth_service, "HTTP", "Auth")
+Rel(api_gateway, user_service, "HTTP", "User data")
+Rel(api_gateway, content_service, "HTTP", "Content")
+Rel(api_gateway, streaming_service, "HTTP", "Stream URLs")
+Rel(api_gateway, search_service, "HTTP", "Search")
+Rel(api_gateway, recommendation_service, "HTTP", "Recommendations")
+Rel(api_gateway, subscription_service, "HTTP", "Subscriptions")
+Rel(api_gateway, billing_service, "HTTP", "Payments")
+Rel(api_gateway, notification_service, "HTTP", "Notifications")
+Rel(api_gateway, review_service, "HTTP", "Reviews")
+
+' Service dependencies
+Rel(auth_service, redis_cache_cluster, "TCP", "Cache storage")
+Rel(user_service, user_db, "SQL", "User data")
+Rel(content_service, content_db, "SQL", "Metadata")
+Rel(content_service, redis_cache_cluster, "TCP", "Cache storage")
+Rel(content_service, s3_storage, "API", "Media files")
+Rel(streaming_service, s3_storage, "API", "Stream source")
+Rel(streaming_service, cdn, "HTTP", "CDN push")
+Rel(search_service, search_service_db, "TCP", "Indexing")
+Rel(recommendation_service, kafka, "Sub", "User events")
+Rel(billing_service, payment_gateway, "HTTPS", "Process payment")
+Rel(analytics_service, kafka, "Sub", "All events")
+Rel(notification_service, kafka, "Sub", "Notification events")
+Rel(analytics_service, analytics_db, "SQL", "Analytics storage")
+Rel(subscription_service, subscription_service_db, "SQL", "Analytics storage")
+Rel(review_service, review_service_db, "SQL", "Review storage")
+
+
+
+' Event bus connections
+Rel(user_service, kafka, "Pub", "User events")
+Rel(content_service, kafka, "Pub", "Content events")
+Rel(analytics_service, kafka, "Sub", "Analytics events")
+Rel(search_service, kafka, "Sub", "Content events")
+Rel(review_service, kafka, "Pub", "Review events")
+
+
+
+' External systems
+Rel(user, cdn, "HTTPS", "Stream video")
+@enduml
