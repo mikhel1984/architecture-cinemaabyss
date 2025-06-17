@@ -1,5 +1,5 @@
 # Build stage
-FROM openjdk:21-jdk-slim as build
+FROM --platform=$BUILDPLATFORM openjdk:21-jdk-slim as build
 
 # Set working directory
 WORKDIR /app
