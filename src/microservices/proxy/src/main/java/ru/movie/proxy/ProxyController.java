@@ -45,9 +45,12 @@ public class ProxyController {
     }
 
     private ResponseEntity<byte[]> forwardRequest(HttpServletRequest request, String targetBaseUrl) throws IOException {
-        String params = request.getQueryString();
+        String params = request.getParameter("id");
         String path = normalizePath(request.getRequestURI());
-        String targetUrl = targetBaseUrl + path + "?" + params;
+        String targetUrl = targetBaseUrl + path;
+        if (params != null && !params.isEmpty()) {
+            targetUrl += "?id=" + params;
+        }
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
         HttpHeaders headers = new HttpHeaders();
