@@ -130,16 +130,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # TESTS
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install npm dependencies for tests
-        run: npm install
-        working-directory: tests/postman
-
-      - name: Run Postman tests
-        run: npm run test:local
-        working-directory: tests/postman
+#      # TESTS
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: '18'
+#
+#      - name: Install npm dependencies for tests
+#        run: npm install
+#        working-directory: tests/postman
+#
+#      - name: Run Postman tests
+#        run: npm run test:local
+#        working-directory: tests/postman

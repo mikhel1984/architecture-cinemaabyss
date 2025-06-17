@@ -178,6 +178,7 @@ cat .docker/config.json | base64
   
   
   
+  
   kubectl apply -f src/kubernetes/dockerconfigsecret.yaml
   kubectl apply -f src/kubernetes/postgres-init-configmap.yaml
   ```

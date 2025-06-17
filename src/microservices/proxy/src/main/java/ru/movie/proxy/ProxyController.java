@@ -8,6 +8,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Random;
 
 @RestController
@@ -39,18 +40,14 @@ public class ProxyController {
         return forwardRequest(request, targetUrl);
     }
 
-    @RequestMapping("/api/users/**")
-    public ResponseEntity<byte[]> proxyUsersRequest(HttpServletRequest request) throws IOException {
-        return forwardRequest(request, monolithUrl);
-    }
-
     private boolean shouldRouteToMoviesService() {
         return gradualMigration && random.nextInt(100) <= moviesMigrationPercent;
     }
 
     private ResponseEntity<byte[]> forwardRequest(HttpServletRequest request, String targetBaseUrl) throws IOException {
+        String params = request.getQueryString();
         String path = normalizePath(request.getRequestURI());
-        String targetUrl = targetBaseUrl + path;
+        String targetUrl = targetBaseUrl + path + "?" + params;
 
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
         HttpHeaders headers = new HttpHeaders();
