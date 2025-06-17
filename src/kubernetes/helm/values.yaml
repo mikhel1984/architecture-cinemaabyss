@@ -5,7 +5,7 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7InVzZXJuYW1lIjoiaHVtb3JzY29yZDEyMzQiLCJwYXNzd29yZCI6ImdocF8waHlnUm9RUndLSjBTUFFFREE5OGZWTGswWUdnTkwwNnNCMFUiLCJlbWFpbCI6InlvdXJfZW1haWxAZXhhbXBsZS5jb20iLCJhdXRoIjoiYUhWdGIzSnpZMjl5WkRFeU16UTZaMmh3WHpCb2VXZFNiMUZTZDB0S01GTlFVVVZFUVRrNFpsWk1hekJaUjJkT1REQTJjMEl3VlE9PSJ9fX0=
 # Database configuration
 database:
   host: postgres
@@ -33,7 +33,7 @@ database:
 monolith:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/monolith
+    repository: ghcr.io/humorscord1234/architecture-cinemaabyss/monolith
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -53,7 +53,7 @@ monolith:
 proxyService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    repository: ghcr.io/humorscord1234/architecture-cinemaabyss/proxy-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -73,7 +73,7 @@ proxyService:
 moviesService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/movies-service
+    repository: ghcr.io/humorscord1234/architecture-cinemaabyss/movies-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -93,7 +93,7 @@ moviesService:
 eventsService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/events-service
+    repository: ghcr.io/humorscord1234/architecture-cinemaabyss/events-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -177,6 +177,14 @@ ingress:
           pathType: Prefix
           service: events-service
           port: 8082
+#        - path: /api/users
+#          pathType: Prefix
+#          service: monolith
+#          port: 8080
+#        - path: /api/movies
+#          pathType: Prefix
+#          service: movies-service
+#          port: 8081
 
 # Application configuration
 config:
