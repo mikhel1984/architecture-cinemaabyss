@@ -1,6 +1,8 @@
 package ru.movie.proxy;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -8,12 +10,12 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Random;
 
 @RestController
 public class ProxyController {
 
+    private static final Logger log = LoggerFactory.getLogger(ProxyController.class);
     private final Random random = new Random();
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -58,6 +60,8 @@ public class ProxyController {
             targetUrl += "?id=" + params;
         }
 
+        log.info("Request targetUrl: " + targetUrl);
+
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
         HttpHeaders headers = new HttpHeaders();
         request.getHeaderNames().asIterator()
@@ -83,11 +87,13 @@ public class ProxyController {
                     response.getStatusCode());
 
         } catch (HttpClientErrorException e) {
+            log.warn(e.getResponseBodyAsString());
             return ResponseEntity
                     .status(e.getStatusCode())
                     .headers(e.getResponseHeaders())
                     .body(e.getResponseBodyAsByteArray());
         } catch (Exception e) {
+            log.warn(e.getMessage());
             return ResponseEntity
                     .internalServerError()
                     .body(("{\"error\":\"Internal Server Error\"}").getBytes());
