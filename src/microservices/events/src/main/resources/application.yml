@@ -1,0 +1,9 @@
+server:
+  port: 8082
+
+kafka:
+  bootstrap-servers: ${KAFKA_BROKERS:kafka:9092}
+  topics:
+    movie: movie-events
+    user: user-events
+    payment: payment-events

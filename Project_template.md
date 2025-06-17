@@ -2,10 +2,7 @@
 
 # Задание 1
 
-1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
-Результат представьте в виде контейнерной диаграммы в нотации С4.
-Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+[App.puml](schemas/App.puml)
 
 # Задание 2
 
@@ -57,7 +54,10 @@
     - Добавьте в docker-compose новый сервис, kafka там уже есть
 
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
-Приложите скриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090 
+
+![img_1.png](schemas/img_1.png)
+![img_2.png](schemas/img_2.png)
+![img_3.png](schemas/img_3.png)
 
 # Задание 3
 
@@ -109,6 +109,7 @@ jobs:
 Как только сборка отработает и в github registry появятся ваши образы, можно переходить к блоку настройки Kubernetes
 Успешным результатом данного шага является "зеленая" сборка и "зеленые" тесты
 
+![img_7.png](schemas/img_7.png)
 
 ### Proxy в Kubernetes
 
@@ -178,6 +179,10 @@ cat .docker/config.json | base64
   ```bash
   kubectl apply -f src/kubernetes/configmap.yaml
   kubectl apply -f src/kubernetes/secret.yaml
+  
+  
+  
+  
   kubectl apply -f src/kubernetes/dockerconfigsecret.yaml
   kubectl apply -f src/kubernetes/postgres-init-configmap.yaml
   ```
@@ -271,10 +276,15 @@ cat .docker/config.json | base64
   ```
   Часть тестов с health-чек упадет, но создание событий отработает.
   Откройте логи event-service и сделайте скриншот обработки событий
+  ![img_4.png](schemas/img_4.png)
+![img_5.png](schemas/img_5.png)
 
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
 
+![img_6.png](schemas/img_6.png)
+![img_5.png](schemas/img_5.png)
+![img_4.png](schemas/img_4.png)
 
 # Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
@@ -333,7 +343,12 @@ kubectl delete  namespace cinemaabyss
 Запустите 
 ```bash
 helm install cinemaabyss .\src\kubernetes\helm --namespace cinemaabyss --create-namespace
+ helm install cinemaabyss ./src/kubernetes/helm --namespace cinemaabyss --create-namespace
+ helm install cinemaabyss src/kubernetes/helm --namespace cinemaabyss --create-namespace
 ```
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f src/kubernetes/ingress.yaml
 Если в процессе будет ошибка
 ```code
 [2025-04-08 21:43:38,780] ERROR Fatal error during KafkaServer startup. Prepare to shutdown (kafka.server.KafkaServer)
@@ -350,6 +365,9 @@ minikube tunnel
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
+![img_8.png](schemas/img_8.png)
+
+![img_9.png](schemas/img_9.png)
 ## Удаляем все
 
 ```bash
