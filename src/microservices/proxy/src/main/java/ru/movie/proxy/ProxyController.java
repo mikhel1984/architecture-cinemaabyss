@@ -40,6 +40,12 @@ public class ProxyController {
         return forwardRequest(request, targetUrl);
     }
 
+    @RequestMapping("/api/users/**")
+    public ResponseEntity<byte[]> proxyUsersRequest(HttpServletRequest request) throws IOException {
+        String targetUrl = monolithUrl;
+        return forwardRequest(request, targetUrl);
+    }
+
     private boolean shouldRouteToMoviesService() {
         return gradualMigration && random.nextInt(100) <= moviesMigrationPercent;
     }
