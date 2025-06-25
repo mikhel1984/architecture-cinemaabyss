@@ -18,6 +18,35 @@ env:
   PROXY_SERVICE_IMAGE_NAME: ${{ github.repository }}/proxy-service
 
 jobs:
+  maven-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - run: cd src/microservices/events
+      - run: mvn --batch-mode --update-snapshots package
+      - run: mkdir staging && cp target/*.jar staging
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Package
+          path: staging
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - run: cd src/microservices/proxy/cloud-proxy
+      - run: mvn --batch-mode --update-snapshots package
+      - run: mkdir staging && cp target/*.jar staging
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Package
+          path: staging
+
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
@@ -82,4 +111,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      
+      - name: Extract metadata (tags, labels) for Events Service
+        id: meta-events
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.EVENTS_SERVICE_IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+            type=ref,event=branch
+            latest
+
+      - name: Build and push Events Service Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./src/microservices/events
+          push: true
+          tags: ${{ steps.meta-events.outputs.tags }}
+          labels: ${{ steps.meta-events.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
