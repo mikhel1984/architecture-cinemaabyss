@@ -1,0 +1,22 @@
+@startuml CinemaAbyss_container
+
+title CinemaAbyss system containers
+
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+!include <C4/C4_Component.puml>
+
+' Users
+Person(user, "User", "A user of the service")
+
+' CinemaAbyss system
+Container_Boundary(CinAbSystem, "CinemaAbyss system") {
+
+}
+
+' External systems
+System_Ext(PaymentService, "Payment service", "Process transactions")
+System_Ext(RecommendationService, "Recommendation service", "Generate recommendations")
+System_Ext(CinemaService, "Cinema service", "Provide content")
+
+
+@enduml
