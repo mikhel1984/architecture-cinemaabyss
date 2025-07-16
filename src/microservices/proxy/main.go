@@ -5,25 +5,29 @@ import (
 	"net/http"
 	"os"
 	"io"
-	"strings"
 	"strconv"
 	"math/rand"
 )
 
+var customTransport = http.DefaultTransport
+
 func main() {
 	http.HandleFunc("/", proxyHandler)
 
-	port := "8082"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
 	log.Printf("Starting proxy on port %s", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
+
 func proxyHandler (w http.ResponseWriter, r *http.Request) {
 	// choose goal service
-	proxyAddr := os.Getenv("EVENTS_SERVICE_URL")
 	monolithAddr := os.Getenv("MONOLITH_URL")
-	newUrl := strings.Replace(r.URL.String(), proxyAddr, monolithAddr, -1)
-
+	newUrl := monolithAddr + r.URL.String()
+	
 	if os.Getenv("GRADUAL_MIGRATION") == "true" {
 		// try microservice
 		n, err := strconv.Atoi(os.Getenv("MOVIES_MIGRATION_PERCENT"))
@@ -34,7 +38,7 @@ func proxyHandler (w http.ResponseWriter, r *http.Request) {
 
 		if rand.Intn(100) < n {
 			serviceAddr := os.Getenv("MOVIES_SERVICE_URL")
-			newUrl = strings.Replace(r.URL.String(), proxyAddr, serviceAddr, -1)
+			newUrl = serviceAddr + r.URL.String()
 		}
 	}
 
@@ -45,24 +49,25 @@ func proxyHandler (w http.ResponseWriter, r *http.Request) {
 	}
 
 	for k, v := range r.Header {
-        proxyReq.Header[k] = v
+		for _, val := range v {
+			proxyReq.Header.Add(k, val)
+		}
     }
 
-	client := &http.Client{}
-    proxyResp, err := client.Do(proxyReq)
+	resp, err := customTransport.RoundTrip(proxyReq)
 	if err != nil {
 		log.Println(err)
-		return 
+		return
 	}
-	defer proxyResp.Body.Close()
+	defer resp.Body.Close()
 
-	w.Header().Set("Content-Type", proxyResp.Header.Get("Content-Type"))
-    w.WriteHeader(proxyResp.StatusCode)
+	for name, values := range resp.Header {
+		for _, value := range values {
+			w.Header().Add(name, value)
+		}
+	}
 
-	// _, err = http.Copy(w, proxyResp.Body)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return
-	// }
-	io.Copy(w, proxyResp.Body)
+	w.WriteHeader(resp.StatusCode)
+
+	io.Copy(w, resp.Body)
 }

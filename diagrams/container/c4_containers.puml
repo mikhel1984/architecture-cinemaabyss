@@ -10,13 +10,23 @@ Person(user, "User", "A user of the service")
 
 ' CinemaAbyss system
 Container_Boundary(CinAbSystem, "CinemaAbyss system") {
+    Container(PaymentService, "Payment processing", "Provide payment functions")
+    Container(CinemaService, "Cinema service", "Movies management")
+
+
 
 }
 
 ' External systems
-System_Ext(PaymentService, "Payment service", "Process transactions")
-System_Ext(RecommendationService, "Recommendation service", "Generate recommendations")
-System_Ext(CinemaService, "Cinema service", "Provide content")
+System_Ext(PaymentSystem, "Payment system", "Process transactions")
+System_Ext(RecommendationSystem, "Recommendation system", "Generate recommendations")
+System_Ext(Cinemas, "Cinemas", "Provide content")
+'System_Ext(FileService, "S3", "Store files")
+
+' Relations
+Rel(PaymentService, PaymentSystem, "")
+Rel(CinemaService, Cinemas, "")
+
 
 
 @enduml
