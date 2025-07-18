@@ -1,5 +1,8 @@
+package main
+
 import (
 	"log"
+	"os"
 	"net/http"
 	"encoding/json"
 	//"time"
@@ -7,8 +10,8 @@ import (
 )
 
 type Event struct {
-	ID		int		`json:"id"`
-	Type	string	`json:"type"`
+	ID		string		`json:"id"`
+	Type	string		`json:"type"`
 	Timestamp	string	`json:"timestamp"`
 	Payload	[]string	`json:"payload"`
 }
@@ -44,8 +47,14 @@ func main() {
 	// 	return
 	// }
 	// defer consumer.Close()
-	
-	
+
+	// Start server
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8082" 
+	}
+	log.Printf("Starting events microservice on port %s", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
