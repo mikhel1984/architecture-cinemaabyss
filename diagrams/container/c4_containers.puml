@@ -6,27 +6,50 @@ title CinemaAbyss system containers
 !include <C4/C4_Component.puml>
 
 ' Users
-Person(user, "User", "A user of the service")
+Person(User, "User", "A user of the service")
+
+Container(Frontend, "Frontend", "")
+
+Container(ApiGateway, "API Gateway", "Route requests")
 
 ' CinemaAbyss system
 Container_Boundary(CinAbSystem, "CinemaAbyss system") {
     Container(PaymentService, "Payment processing", "Provide payment functions")
     Container(CinemaService, "Cinema service", "Movies management")
-
-
-
+    Container(RecommendationSystem, "Recommendation service", "Manage recommendations")
+    ContainerDb(RatingDb, "Rating Db", "User preferences")
+    Container(UserService, "User service", "User management")
+    ContainerDb(UserDb, "User Db", "User data")
 }
+
+' Initial system
+Container(Monolith, "Monolith system", "Initial service")
 
 ' External systems
 System_Ext(PaymentSystem, "Payment system", "Process transactions")
-System_Ext(RecommendationSystem, "Recommendation system", "Generate recommendations")
+System_Ext(Recommendations, "Recommendation system", "Generate recommendations")
 System_Ext(Cinemas, "Cinemas", "Provide content")
 'System_Ext(FileService, "S3", "Store files")
+
+Rel(User, Frontend, "")
+Rel(Frontend, ApiGateway, "")
+
+Rel(ApiGateway, Monolith, "")
+Rel(ApiGateway, PaymentService, "")
+Rel(ApiGateway, UserService, "")
+Rel(ApiGateway, CinemaService, "")
 
 ' Relations
 Rel(PaymentService, PaymentSystem, "")
 Rel(CinemaService, Cinemas, "")
+Rel(RecommendationSystem, Recommendations, "")
 
+Rel(Monolith, PaymentSystem, "")
+Rel(Monolith, Recommendations, "")
+Rel(Monolith, Cinemas, "")
+
+Rel(UserService, UserDb, "")
+Rel(RecommendationSystem, RatingDb, "")
 
 
 @enduml
