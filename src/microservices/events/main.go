@@ -23,6 +23,9 @@ type Movie struct {
 	Event	Event	`json:"event"`
 }
 
+var client kgo.NewClient
+var ctx context.Background
+
 func main() {
 
 	http.HandleFunc("/api/events/health", handleHealth)
@@ -30,23 +33,23 @@ func main() {
 	http.HandleFunc("/api/events/user", handleUser)
 	http.HandleFunc("/api/events/payment", handlePayment)
 
-	// producer, err := kafka.NewProducer(&kafka.ConfigMap{
-	// 	"bootstrap.servers": "host1:9092,host2:9092",
-	// })	
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return
-	// }
-	// defer producer.Close()
-	
-	// consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-	// 	"bootstrap.servers":    "host1:9092,host2:9092",
-	// })
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return
-	// }
-	// defer consumer.Close()
+	// kafka part
+	// https://github.com/twmb/franz-go/tree/master
+	seeds := []string{"localhost:9092"}
+	var err Error
+	client, err = kgo.NewClient(
+		kgo.SeedBrokers(seeds...),
+		kgo.ConsumerGroup("my-group-identifier"),
+		kgo.ConsumeTopics("foo"),
+	)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer client.Close()
+	ctx = context.Background()
+
+	go receive_msgs()
 
 	// Start server
 	port := os.Getenv("PORT")
@@ -101,4 +104,58 @@ func createMovie(w http.ResponseWriter, r *http.Request) {
 	m.Event.Type = "movie"
 	m.Event.Timestamp = "2023-01-15T14:30:00Z"
 	json.NewEncoder(w).Encode(m)
+}
+
+func receive_msgs () {
+	// 2.) Consuming messages from a topic
+	for {
+		fetches := client.PollFetches(ctx)
+		if errs := fetches.Errors(); len(errs) > 0 {
+			// All errors are retried internally when fetching, but non-retriable errors are
+			// returned from polls so that users can notice and take action.
+			log.Println(errs)
+			return
+		}
+
+		// We can iterate through a record iterator...
+		iter := fetches.RecordIter()
+		for !iter.Done() {
+			record := iter.Next()
+			//fmt.Println(string(record.Value), "from an iterator!")
+			log.Println("receive", string(record.Value))
+		}
+
+		// or a callback function.
+		// fetches.EachPartition(func(p kgo.FetchTopicPartition) {
+		// 	for _, record := range p.Records {
+		// 		fmt.Println(string(record.Value), "from range inside a callback!")
+		// 	}
+
+		// 	// We can even use a second callback!
+		// 	p.EachRecord(func(record *kgo.Record) {
+		// 		fmt.Println(string(record.Value), "from a second callback!")
+		// 	})
+		// })
+	}
+
+}
+
+func send_msg(string event) {
+	
+	// var wg sync.WaitGroup
+	// wg.Add(1)
+	record := &kgo.Record{Topic: "foo", Value: []byte(event)}
+	// client.Produce(ctx, record, func(_ *kgo.Record, err error) {
+	// 	defer wg.Done()
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 		return
+	// 	}
+	// })
+	// wg.Wait()
+
+	// Alternatively, ProduceSync exists to synchronously produce a batch of records.
+	if err := cl.ProduceSync(ctx, record).FirstErr(); err != nil {
+		fmt.Printf("record had a produce error while synchronously producing: %v\n", err)
+	}	
 }
