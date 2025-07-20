@@ -5,8 +5,9 @@ import (
 	"os"
 	"net/http"
 	"encoding/json"
-	//"time"
-    //"github.com/confluentinc/confluent-kafka-go/kafka"
+	"context"
+	//"github.com/twmb/franz-go/pkg/kadm"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
 
 type Event struct {
@@ -23,8 +24,8 @@ type Movie struct {
 	Event	Event	`json:"event"`
 }
 
-var client kgo.NewClient
-var ctx context.Background
+var client *kgo.Client
+var ctx context.Context
 
 func main() {
 
@@ -36,7 +37,7 @@ func main() {
 	// kafka part
 	// https://github.com/twmb/franz-go/tree/master
 	seeds := []string{"localhost:9092"}
-	var err Error
+	var err error
 	client, err = kgo.NewClient(
 		kgo.SeedBrokers(seeds...),
 		kgo.ConsumerGroup("my-group-identifier"),
@@ -140,7 +141,7 @@ func receive_msgs () {
 
 }
 
-func send_msg(string event) {
+func send_msg(event string) {
 	
 	// var wg sync.WaitGroup
 	// wg.Add(1)
@@ -155,7 +156,8 @@ func send_msg(string event) {
 	// wg.Wait()
 
 	// Alternatively, ProduceSync exists to synchronously produce a batch of records.
-	if err := cl.ProduceSync(ctx, record).FirstErr(); err != nil {
-		fmt.Printf("record had a produce error while synchronously producing: %v\n", err)
+	if err := client.ProduceSync(ctx, record).FirstErr(); err != nil {
+		//fmt.Printf("record had a produce error while synchronously producing: %v\n", err)
+		log.Println(err)
 	}	
 }
