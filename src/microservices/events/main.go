@@ -50,7 +50,7 @@ func main() {
 	defer client.Close()
 	ctx = context.Background()
 
-	go receive_msgs()
+	go receiveMsgs()
 
 	// Start server
 	port := os.Getenv("PORT")
@@ -69,7 +69,8 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 func handleMovies(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
-		createMovie(w, r)
+		sendMsg("Movie")
+		createMovie(w, r)		
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -78,6 +79,7 @@ func handleMovies(w http.ResponseWriter, r *http.Request) {
 func handleUser(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
+		sendMsg("User")
 		createMovie(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -87,6 +89,7 @@ func handleUser(w http.ResponseWriter, r *http.Request) {
 func handlePayment(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
+		sendMsg("Payment")
 		createMovie(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -107,7 +110,7 @@ func createMovie(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(m)
 }
 
-func receive_msgs () {
+func receiveMsgs () {
 	// 2.) Consuming messages from a topic
 	for {
 		fetches := client.PollFetches(ctx)
@@ -141,7 +144,7 @@ func receive_msgs () {
 
 }
 
-func send_msg(event string) {
+func sendMsg(event string) {
 	
 	// var wg sync.WaitGroup
 	// wg.Add(1)
