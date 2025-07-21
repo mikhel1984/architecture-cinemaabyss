@@ -6,6 +6,7 @@ import (
 	"os"
 	"io"
 	"strconv"
+	"strings"
 	"math/rand"
 )
 
@@ -25,22 +26,31 @@ func main() {
 
 func proxyHandler (w http.ResponseWriter, r *http.Request) {
 	// choose goal service
-	monolithAddr := os.Getenv("MONOLITH_URL")
-	newUrl := monolithAddr + r.URL.String()
-	
-	if os.Getenv("GRADUAL_MIGRATION") == "true" {
-		// try microservice
-		n, err := strconv.Atoi(os.Getenv("MOVIES_MIGRATION_PERCENT"))
-		if err != nil {
-			log.Println(err)
-			return
-		}
+	var newUrl string
+	if strings.HasPrefix(r.URL.String(), "/api/events") {
+		newUrl = os.Getenv("EVENTS_SERVICE_URL")
+	} else {
+		if os.Getenv("GRADUAL_MIGRATION") == "true" {
+			// try microservice
+			n, err := strconv.Atoi(os.Getenv("MOVIES_MIGRATION_PERCENT"))
+			if err != nil {
+				log.Println(err)
+				return
+			}
 
-		if rand.Intn(100) < n {
-			serviceAddr := os.Getenv("MOVIES_SERVICE_URL")
-			newUrl = serviceAddr + r.URL.String()
+			if rand.Intn(100) < n {
+				newUrl = os.Getenv("MOVIES_SERVICE_URL")
+			} else {
+				newUrl = os.Getenv("MONOLITH_URL")
+			}			
+		} else {
+			newUrl = os.Getenv("MOVIES_SERVICE_URL")
 		}
 	}
+
+	newUrl += r.URL.String()
+
+	// retranslate
 
 	proxyReq, err := http.NewRequest(r.Method, newUrl, r.Body)
 	if err != nil {
