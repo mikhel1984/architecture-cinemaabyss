@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"math/rand"
+	"encoding/json"
 )
 
 var customTransport = http.DefaultTransport
@@ -25,11 +26,18 @@ func main() {
 
 
 func proxyHandler (w http.ResponseWriter, r *http.Request) {
-	// choose goal service
+	
 	var newUrl string
+	if r.URL.String() == "/health" && r.Method == "GET" {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]bool{"status": true})
+		return
+	}
+
+	// choose goal service
 	if strings.HasPrefix(r.URL.String(), "/api/events") {
 		newUrl = os.Getenv("EVENTS_SERVICE_URL")
-	} else {
+	} else if strings.HasPrefix(r.URL.String(), "/api/movies") {
 		if os.Getenv("GRADUAL_MIGRATION") == "true" {
 			// try microservice
 			n, err := strconv.Atoi(os.Getenv("MOVIES_MIGRATION_PERCENT"))
@@ -46,6 +54,8 @@ func proxyHandler (w http.ResponseWriter, r *http.Request) {
 		} else {
 			newUrl = os.Getenv("MOVIES_SERVICE_URL")
 		}
+	} else {
+		newUrl = os.Getenv("MONOLITH_URL")
 	}
 
 	newUrl += r.URL.String()
