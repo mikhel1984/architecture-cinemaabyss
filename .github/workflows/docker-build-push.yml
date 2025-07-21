@@ -82,7 +82,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-            - name: Extract metadata (tags, labels) for Proxy Service
+      - name: Extract metadata (tags, labels) for Proxy Service
         id: meta-proxy
         uses: docker/metadata-action@v4
         with:
@@ -114,7 +114,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-            - name: Extract metadata (tags, labels) for Events Service
+      - name: Extract metadata (tags, labels) for Events Service
         id: meta-events
         uses: docker/metadata-action@v4
         with:
