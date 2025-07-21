@@ -36,12 +36,13 @@ func main() {
 
 	// kafka part
 	// https://github.com/twmb/franz-go/tree/master
-	seeds := []string{"localhost:9092"}
+	broker := os.Getenv("KAFKA_BROKERS")
+	seeds := []string{broker}
 	var err error
 	client, err = kgo.NewClient(
 		kgo.SeedBrokers(seeds...),
-		kgo.ConsumerGroup("my-group-identifier"),
-		kgo.ConsumeTopics("foo"),
+		kgo.ConsumerGroup("cinemaabyss-group"),
+		kgo.ConsumeTopics("movie-events", "user-events", "payment-events"),
 	)
 	if err != nil {
 		log.Println(err)
@@ -69,7 +70,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 func handleMovies(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
-		sendMsg("Movie")
+		sendMsg("Movie", "movie-events")
 		createMovie(w, r)		
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -79,7 +80,7 @@ func handleMovies(w http.ResponseWriter, r *http.Request) {
 func handleUser(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
-		sendMsg("User")
+		sendMsg("User", "user-events")
 		createMovie(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -89,7 +90,7 @@ func handleUser(w http.ResponseWriter, r *http.Request) {
 func handlePayment(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
-		sendMsg("Payment")
+		sendMsg("Payment", "payment-events")
 		createMovie(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -144,11 +145,11 @@ func receiveMsgs () {
 
 }
 
-func sendMsg(event string) {
+func sendMsg(event string, topic string) {
 	
 	// var wg sync.WaitGroup
 	// wg.Add(1)
-	record := &kgo.Record{Topic: "foo", Value: []byte(event)}
+	record := &kgo.Record{Topic: topic, Value: []byte(event)}
 	// client.Produce(ctx, record, func(_ *kgo.Record, err error) {
 	// 	defer wg.Done()
 	// 	if err != nil {
