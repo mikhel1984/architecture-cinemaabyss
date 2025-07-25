@@ -1,0 +1,58 @@
+@startuml CinemaAbyss_container
+
+title CinemaAbyss system containers
+
+top to bottom direction
+
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+!include <C4/C4_Component.puml>
+
+' Users
+Person(User, "User", "Web, mobile")
+
+Container(Frontend, "Frontend", "")
+
+Container(ApiGateway, "API Gateway", "Route requests")
+
+' CinemaAbyss system
+Container_Boundary(CinAbSystem, "CinemaAbyss system") {
+    Container(PaymentService, "Payment processing", "Provide payment functions")
+    Container(CinemaService, "Cinema service", "Movies management")
+    Container(RecommendationSystem, "Recommendation service", "Manage recommendations")
+    ContainerDb(RatingDb, "Rating Db", "User preferences")
+    Container(UserService, "User service", "User management")
+    ContainerDb(UserDb, "User Db", "User data")
+}
+
+' Initial system
+Container(Monolith, "Monolith system", "Initial service")
+
+' External systems
+System_Ext(PaymentSystem, "Payment system", "Process transactions")
+System_Ext(Recommendations, "Recommendation system", "Generate recommendations")
+System_Ext(Cinemas, "Cinemas", "Provide content")
+'System_Ext(FileService, "S3", "Store files")
+
+Rel(User, Frontend, "Uses system")
+Rel(Frontend, ApiGateway, "Interact with system")
+
+Rel(ApiGateway, Monolith, "Call initial service")
+Rel(ApiGateway, PaymentService, "Do payments")
+Rel(ApiGateway, UserService, "Do registration")
+Rel(ApiGateway, CinemaService, "Get movies")
+Rel(ApiGateway, RecommendationSystem, "Get recommendations")
+
+' Relations
+Rel(PaymentService, PaymentSystem, "Transactions")
+Rel(CinemaService, Cinemas, "Get content")
+Rel(RecommendationSystem, Recommendations, "Get recomendations")
+
+Rel(Monolith, PaymentSystem, "Transactions")
+Rel(Monolith, Recommendations, "Get recomentations")
+Rel(Monolith, Cinemas, "Get content")
+
+Rel(UserService, UserDb, "Read/write user data")
+Rel(RecommendationSystem, RatingDb, "Read/write user preferences")
+
+
+@enduml
